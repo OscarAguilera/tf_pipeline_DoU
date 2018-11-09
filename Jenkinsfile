@@ -23,24 +23,35 @@ pipeline {
             }
         }
         stage('verify') {
-            when { env.BRANCH_NAME == 'feat*'}
+            when { 
+                branch 'feat*'
+            }
             steps {
                 sh 'terraform verify'
             }
         }
         
         stage('plan') {
-            when { env.BRANCH_NAME == 'dev*'}
+            when { 
+                branch 'dev*'
+            }
             steps {
                 sh 'terraform plan -out=plan -input=false'
                 input(message: "Do you want to apply this plan?", ok: "yes")
             }
         }
         stage('apply') {
-            when { env.BRANCH_NAME == 'dev*'}
+            when { 
+                branch 'dev*'
+            }
+            steps {
+                sh 'terraform apply -input=false plan'
+            }
         }
         stage('destroy') {
-            when { env.BRANCH_NAME == 'dev*'}
+            when { 
+                branch 'dev*'
+            }
             steps {
                 sh 'terraform destroy -force -input=false'
             }
