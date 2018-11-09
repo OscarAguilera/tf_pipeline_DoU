@@ -38,7 +38,6 @@ pipeline {
         }
         stage('apply') {
             when { env.BRANCH_NAME == 'dev*'}
-            }
         }
         stage('destroy') {
             when { env.BRANCH_NAME == 'dev*'}
