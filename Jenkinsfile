@@ -24,7 +24,7 @@ pipeline {
         }
         stage('verify') {
             when { 
-                expression{ env.BRANCH_NAME == /feat*/ }
+                expression{ env.BRANCH_NAME ==~ /feat*/ }
             }
             steps {
                 sh 'terraform verify'
