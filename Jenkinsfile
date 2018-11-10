@@ -22,12 +22,12 @@ pipeline {
                 sh 'terraform init -input=false'
             }
         }
-        stage('verify') {
+        stage('validate') {
             when { 
-                expression{ env.BRANCH_NAME ==~ "feature/devops1" }
+                expression{ env.BRANCH_NAME ==~ /feat.*/ }
             }
             steps {
-                sh 'terraform verify'
+                sh 'terraform validate'
             }
         }
         
