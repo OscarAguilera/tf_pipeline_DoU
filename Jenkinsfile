@@ -40,7 +40,12 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
                     sh 'echo "- user: jenkinsdou" >> ~/.config/hub'
                     sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
                     sh 'echo "  protocol: https" >> ~/.config/hub'
-                    sh "hub pull-request -m \"${COMMIT_MESSAGE} ${MESSAGE}\" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
+                    try {
+                        sh "hub pull-request -m \"${COMMIT_MESSAGE} ${MESSAGE}\" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
+                    }catch(Exception e) {
+                        echo "PR already created"
+                    }
+                    
                 }
             }
         }
