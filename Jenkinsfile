@@ -34,14 +34,15 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
             when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
                 script {
-                    def COMMIT_MESSAGE = sh('git log -1 --pretty=%B') 
+                    def COMMIT_MESSAGE = sh(script:'git log -1 --pretty=%B', 
+                        returnStdout: true).trim() 
                     sh 'mkdir ~/.config'
                     sh 'echo "github.com:" >> ~/.config/hub'
                     sh 'echo "- user: jenkinsdou" >> ~/.config/hub'
                     sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
                     sh 'echo "  protocol: https" >> ~/.config/hub'
                     try {
-                        sh "hub pull-request -m \"${COMMIT_MESSAGE} ${MESSAGE}\" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
+                        sh "hub pull-request -m \"${MESSAGE} ${COMMIT_MESSAGE} \" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
                     }catch(Exception e) {
                         echo "PR already created"
                     }
