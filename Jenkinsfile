@@ -1,8 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'hashicorp/terraform:0.11.10'
-            args '--entrypoint=""'
+            image 'gmlpdou/terraform_hub:0.11.10'
         }
     }
     environment {
@@ -19,36 +18,25 @@ pipeline {
             steps {
                 // send build started notifications
                 // slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+                sh 'cd terraform'
                 sh 'terraform init -input=false'
             }
         }
         stage('validate') {
-            when { 
-                expression{ env.BRANCH_NAME ==~ /feat.*/ }
-            }
+            when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
                 sh 'terraform validate'
             }
         }
         stage('generate pr') {
-            agent {
-                docker {
-                    image 'tianon/github-hub'
-                    args '--entrypoint=""'
-                }
-            }
-            when { 
-                expression{ env.BRANCH_NAME ==~ /feat.*/ }
-            }
+            when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
                 sh 'echo hello'
             }
         }
         
         stage('plan') {
-            when { 
-                expression{ env.BRANCH_NAME ==~ /dev.*/ }
-            }
+            when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
                 sh 'terraform plan -out=plan -input=false'
                 input(message: "Do you want to apply this plan?", ok: "yes")
@@ -63,9 +51,7 @@ pipeline {
             }
         }
         stage('destroy') {
-            when { 
-                expression{ env.BRANCH_NAME ==~ /dev.*/ }
-            }
+            when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
                 sh 'terraform destroy -force -input=false'
             }
