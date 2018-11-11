@@ -1,4 +1,5 @@
-pipeline {
+def DEV_BRANCH = "dev" 
+ pipeline {
     agent {
         docker {
             image 'gmlpdou/terraform_hub:0.11.10'
@@ -9,6 +10,7 @@ pipeline {
         AWS_SECRET_ACCESS_KEY = credentials('aws_secret_key')
         TF_VAR_my_public_key_path = credentials('ssh-public-key')
         TF_VAR_my_private_key_path = credentials('ssh-private-key')
+        TOKEN = credentials('gh-token')
     }
     triggers {
          pollSCM('H/5 * * * *')
@@ -30,7 +32,12 @@ pipeline {
         stage('generate pr') {
             when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
-                sh 'echo hello'
+                sh 'mkdir ~/config'
+                sh 'echo "github.com:" >> ~/config/hub'
+                sh 'echo "- user: jenkinsdou" >> ~/config/hub'
+                sh 'echo "  oauth_token: ${env.TOKEN}" >> ~/config/hub'
+                sh 'echo "  protocol: https" >> ~/config/hub'
+                sh 'hub pull-request -m "${env.MESSAGE}" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}'
             }
         }
         
