@@ -30,10 +30,24 @@ pipeline {
                 sh 'terraform validate'
             }
         }
+        stage('generate pr') {
+            agent {
+                docker {
+                    image 'tianon/github-hub'
+                    args '--entrypoint=""'
+                }
+            }
+            when { 
+                expression{ env.BRANCH_NAME ==~ /feat.*/ }
+            }
+            steps {
+                sh 'echo hello'
+            }
+        }
         
         stage('plan') {
             when { 
-                branch 'dev*'
+                expression{ env.BRANCH_NAME ==~ /dev.*/ }
             }
             steps {
                 sh 'terraform plan -out=plan -input=false'
@@ -42,7 +56,7 @@ pipeline {
         }
         stage('apply') {
             when { 
-                branch 'dev*'
+                expression{ env.BRANCH_NAME ==~ /dev.*/ }
             }
             steps {
                 sh 'terraform apply -input=false plan'
@@ -50,7 +64,7 @@ pipeline {
         }
         stage('destroy') {
             when { 
-                branch 'dev*'
+                expression{ env.BRANCH_NAME ==~ /dev.*/ }
             }
             steps {
                 sh 'terraform destroy -force -input=false'
