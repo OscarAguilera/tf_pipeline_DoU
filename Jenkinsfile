@@ -32,7 +32,7 @@ def DEV_BRANCH = "dev"
         stage('generate pr') {
             when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
-                sh 'mkdir ~/config'
+                sh 'mkdir ~/.config'
                 sh 'echo "github.com:" >> ~/.config/hub'
                 sh 'echo "- user: jenkinsdou" >> ~/.config/hub'
                 sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
