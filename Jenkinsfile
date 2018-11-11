@@ -19,6 +19,7 @@ pipeline {
                 // send build started notifications
                 // slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
                 sh 'cd terraform'
+                stash name:'terraform'
                 sh 'terraform init -input=false'
             }
         }
