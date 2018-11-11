@@ -1,5 +1,5 @@
-def DEV_BRANCH = "dev" 
-def MESSAGE = "PR Created Automatically by Jenkins \n" 
+def DEV_BRANCH = "dev"
+def MESSAGE = "PR Created Automatically by Jenkins \n"
  pipeline {
     agent {
         docker {
@@ -33,24 +33,10 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
         stage('generate pr') {
             when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
-                script {
-                    def COMMIT_MESSAGE = sh(script:'git log -1 --pretty=%B', 
-                        returnStdout: true).trim() 
-                    sh 'mkdir ~/.config'
-                    sh 'echo "github.com:" >> ~/.config/hub'
-                    sh 'echo "- user: jenkinsdou" >> ~/.config/hub'
-                    sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
-                    sh 'echo "  protocol: https" >> ~/.config/hub'
-                    try {
-                        sh "hub pull-request -m \"${MESSAGE} ${COMMIT_MESSAGE} \" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
-                    }catch(Exception e) {
-                        echo "PR already created"
-                    }
-                    
-                }
+                createPR "jenkinsdou", "PR Created Automatically by Jenkins", "dev", env.BRANCH_NAME, "gmlp"
             }
         }
-        
+
         stage('plan') {
             when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
@@ -59,7 +45,7 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
             }
         }
         stage('apply') {
-            when { 
+            when {
                 expression{ env.BRANCH_NAME ==~ /dev.*/ }
             }
             steps {
@@ -82,4 +68,19 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
 
    //     }
    // }
+}
+
+def createPR (user, message, tobranch, frombranch, org){
+  def COMMIT_MESSAGE = sh(script:'git log -1 --pretty=%B',
+      returnStdout: true).trim()
+  sh 'mkdir ~/.config'
+  sh 'echo "github.com:" >> ~/.config/hub'
+  sh "echo \"- user: ${user}\" >> ~/.config/hub"
+  sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
+  sh 'echo "  protocol: https" >> ~/.config/hub'
+  try {
+      sh "hub pull-request -m \"${message}\n  ${COMMIT_MESSAGE} \" -b ${org}:${tobranch} -h ${org}:${frombranch}"
+  }catch(Exception e) {
+      echo "PR already created"
+  }
 }
