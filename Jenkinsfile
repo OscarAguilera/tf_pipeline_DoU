@@ -1,9 +1,8 @@
-def DEV_BRANCH = "dev"
-def MESSAGE = "PR Created Automatically by Jenkins \n"
+readProperties = loadConfigurationFile 'configFile'
  pipeline {
     agent {
         docker {
-            image 'gmlpdou/terraform_hub:0.11.10'
+            image readProperties.image
         }
     }
     environment {
@@ -19,8 +18,6 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
     stages {
         stage('init') {
             steps {
-                // send build started notifications
-                // slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
                 sh 'cd terraform && terraform init -input=false'
             }
         }
@@ -41,13 +38,12 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
             when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
                 sh 'cd terrform && terraform plan -out=plan -input=false'
+                emailext subject: "Approval manual steps", to: readProperties.emailApprovers, body:"Please approve or abort plant promotion using the enclosed link"
                 input(message: "Do you want to apply this plan?", ok: "yes")
             }
         }
         stage('apply') {
-            when {
-                expression{ env.BRANCH_NAME ==~ /dev.*/ }
-            }
+            when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
                 sh 'cd terraform && terraform apply -input=false plan'
             }
@@ -59,28 +55,21 @@ def MESSAGE = "PR Created Automatically by Jenkins \n"
             }
         }
     }
-   // post {
-   //     success {
-   //         slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-   //     }
-   //     failure {
-   //         slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    post {
+      success {
+        emailext subject: "SUCCESSFUL: Job ${env.JOB_NAME}", to: readProperties.emailApprovers, body: """All,
+                  Build job# ${env.BUILD_NUMBER}  has finished successfully.
+                  URL_JOB: ${env.BUILD_URL}
 
-   //     }
-   // }
-}
-
-def createPR (user, message, tobranch, frombranch, org){
-  def COMMIT_MESSAGE = sh(script:'git log -1 --pretty=%B',
-      returnStdout: true).trim()
-  sh 'mkdir ~/.config'
-  sh 'echo "github.com:" >> ~/.config/hub'
-  sh "echo \"- user: ${user}\" >> ~/.config/hub"
-  sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
-  sh 'echo "  protocol: https" >> ~/.config/hub'
-  try {
-      sh "hub pull-request -m \"${message}\n  ${COMMIT_MESSAGE} \" -b ${org}:${tobranch} -h ${org}:${frombranch}"
-  }catch(Exception e) {
-      echo "PR already created"
-  }
+                  Regards,
+                  DevOps
+                  """
+      }
+      failure {
+        script{
+          def commiter_user = sh "git log -1 --formarmat='%ae'"
+          emailext subject: "FAILED: Job ${env.JOB_NAME}", to: "${commiter_user}", body: "${env.BUILD_URL}"
+        }
+      }
+    }
 }
