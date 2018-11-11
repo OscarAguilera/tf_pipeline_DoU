@@ -18,15 +18,13 @@ pipeline {
             steps {
                 // send build started notifications
                 // slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-                sh 'cd terraform'
-                stash name:'terraform'
-                sh 'terraform init -input=false'
+                sh 'cd terraform && terraform init -input=false'
             }
         }
         stage('validate') {
             when { expression{ env.BRANCH_NAME ==~ /feat.*/ } }
             steps {
-                sh 'terraform validate'
+                sh 'cd terraform && terraform validate'
             }
         }
         stage('generate pr') {
@@ -39,7 +37,7 @@ pipeline {
         stage('plan') {
             when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
-                sh 'terraform plan -out=plan -input=false'
+                sh 'cd terrform && terraform plan -out=plan -input=false'
                 input(message: "Do you want to apply this plan?", ok: "yes")
             }
         }
@@ -48,13 +46,13 @@ pipeline {
                 expression{ env.BRANCH_NAME ==~ /dev.*/ }
             }
             steps {
-                sh 'terraform apply -input=false plan'
+                sh 'cd terraform && terraform apply -input=false plan'
             }
         }
         stage('destroy') {
             when { expression{ env.BRANCH_NAME ==~ /dev.*/ } }
             steps {
-                sh 'terraform destroy -force -input=false'
+                sh 'cd terraform && terraform destroy -force -input=false'
             }
         }
     }
