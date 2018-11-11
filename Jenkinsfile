@@ -1,4 +1,5 @@
 def DEV_BRANCH = "dev" 
+def MESSAGE = "PR Created Automatically by Jenkins"
  pipeline {
     agent {
         docker {
@@ -37,7 +38,7 @@ def DEV_BRANCH = "dev"
                 sh 'echo "- user: jenkinsdou" >> ~/.config/hub'
                 sh "echo \"  oauth_token: ${env.TOKEN}\" >> ~/.config/hub"
                 sh 'echo "  protocol: https" >> ~/.config/hub'
-                sh "hub pull-request -m \"${env.MESSAGE}\" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
+                sh "hub pull-request -m \"${MESSAGE}\" -b gmlp:${DEV_BRANCH} -h gmlp:${env.BRANCH_NAME}"
             }
         }
         
